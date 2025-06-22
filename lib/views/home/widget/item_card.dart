@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sisfo_sarpras_revisi/models/cart_item.dart';
 import 'package:sisfo_sarpras_revisi/models/item.dart';
-import 'package:sisfo_sarpras_revisi/providers/cart_provider.dart';
 import 'package:sisfo_sarpras_revisi/providers/item_provider.dart';
 import 'package:sisfo_sarpras_revisi/views/item/item_detail_page.dart';
 
 class ItemCard extends StatelessWidget {
   final Item item;
-  final VoidCallback? onTap;
 
   const ItemCard({
     super.key,
     required this.item,
-    this.onTap,
   });
 
   @override
@@ -30,18 +26,22 @@ class ItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         onTap: () {
           Navigator.push(
-            context, 
-            MaterialPageRoute(builder: (context) => ItemDetailPage(item: item))
+            context,
+            MaterialPageRoute(
+              builder: (context) => ItemDetailPage(item: item),
+            ),
           );
-          Provider.of<ItemProvider>(context, listen: false)
-              .fetchUnitsByItemId(item.id);
+          if (!isConsumable) {
+            Provider.of<ItemProvider>(context, listen: false)
+                .fetchUnitsByItemId(item.id);
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Image Placeholder
+              // Placeholder gambar/icon
               Container(
                 width: 60,
                 height: 60,
@@ -51,10 +51,8 @@ class ItemCard extends StatelessWidget {
                 ),
                 child: const Icon(Icons.inventory_2, color: Colors.grey),
               ),
-
               const SizedBox(width: 16),
-
-              // Name and Stock Column
+              // Nama & stok
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,126 +77,13 @@ class ItemCard extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Cart Button (for consumable) or Type Badge
-              if (isConsumable)
-                _buildCartButton(context)
-              else
-                _buildTypeBadge(item.type),
+              // Lencana tipe barang
+              _buildTypeBadge(item.type),
             ],
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildCartButton(BuildContext context) {
-    return Consumer<CartProvider>(
-      builder: (context, cart, _) {
-        try {
-          final isInCart = cart.items.any((ci) => ci.item.id == item.id && ci.unit == null);
-          
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: isInCart
-                ? _buildQuantityControl(context, cart)
-                : IconButton(
-                    key: const ValueKey('add_button'),
-                    icon: const Icon(Icons.add_shopping_cart),
-                    color: Colors.blue,
-                    onPressed: () {
-                      _addToCart(context, cart);
-                    },
-                  ),
-          );
-        } catch (e) {
-          debugPrint('Error in _buildCartButton: $e');
-          return const SizedBox(); // Fallback widget
-        }
-      },
-    );
-  }
-
-  void _addToCart(BuildContext context, CartProvider cart) {
-    if ((item.stock ?? 0) <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Stok ${item.name} habis')),
-      );
-      return;
-    }
-    
-    try {
-      cart.addToCart(CartItem(
-        item: item,
-        quantity: 1,
-        addedAt: DateTime.now(),
-      ));
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${item.name} ditambahkan ke cart')),
-      );
-    } catch (e) {
-      debugPrint('Error adding to cart: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal menambahkan ke cart')),
-      );
-    }
-  }
-
-  Widget _buildQuantityControl(BuildContext context, CartProvider cart) {
-    try {
-      final cartItem = cart.items.firstWhere(
-        (ci) => ci.item.id == item.id && ci.unit == null,
-      );
-
-      return Container(
-        key: const ValueKey('quantity_control'),
-        decoration: BoxDecoration(
-          color: Colors.blue[50],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.remove, size: 18),
-              onPressed: () => _decreaseQuantity(context, cart, cartItem),
-            ),
-            Text(
-              '${cartItem.quantity}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add, size: 18),
-              onPressed: () => _increaseQuantity(context, cart, cartItem),
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      debugPrint('Error in _buildQuantityControl: $e');
-      return const SizedBox(); // Fallback widget
-    }
-  }
-
-  void _decreaseQuantity(BuildContext context, CartProvider cart, CartItem cartItem) {
-    if (cartItem.quantity > 1) {
-      cartItem.quantity--;
-      cart.notifyListeners();
-    } else {
-      cart.removeFromCart(cartItem.item.id);
-    }
-  }
-
-  void _increaseQuantity(BuildContext context, CartProvider cart, CartItem cartItem) {
-    if (cartItem.quantity < (item.stock ?? 0)) {
-      cartItem.quantity++;
-      cart.notifyListeners();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Stok ${item.name} tidak cukup')),
-      );
-    }
   }
 
   Widget _buildTypeBadge(String type) {
@@ -225,12 +110,8 @@ class ItemCard extends StatelessWidget {
         return Colors.orange;
       case 'reusable':
         return Colors.green;
-      case 'electronic':
-        return Colors.blue;
-      case 'furniture':
-        return Colors.brown;
       default:
-        return Colors.purple;
+        return Colors.blueGrey;
     }
   }
 }

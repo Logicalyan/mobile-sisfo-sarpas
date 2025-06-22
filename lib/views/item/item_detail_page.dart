@@ -20,15 +20,10 @@ class ItemDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section
-            _buildHeaderSection(context),
+            _buildHeader(context),
             const SizedBox(height: 24),
-            
-            // Detail Section
-            _buildDetailSection(),
+            _buildDetailCard(),
             const SizedBox(height: 24),
-            
-            // Units Section
             _buildUnitsSection(context),
           ],
         ),
@@ -36,11 +31,11 @@ class ItemDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderSection(BuildContext context) {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Image placeholder
+        // Placeholder gambar
         Container(
           width: 100,
           height: 100,
@@ -48,12 +43,10 @@ class ItemDetailPage extends StatelessWidget {
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(8),
           ),
-          child: item.name != null
-              ? Image.network(item.name!, fit: BoxFit.cover)
-              : const Icon(Icons.inventory, size: 40, color: Colors.grey),
+          child: const Icon(Icons.inventory, size: 40, color: Colors.grey),
         ),
         const SizedBox(width: 16),
-        
+        // Informasi item
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,14 +58,10 @@ class ItemDetailPage extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 4),
-              Text(
-                'Kode: ${item.code}',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
+              Text('Kode: ${item.code}', style: TextStyle(color: Colors.grey[600])),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _getTypeColor(item.type),
                   borderRadius: BorderRadius.circular(12),
@@ -93,123 +82,79 @@ class ItemDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailSection() {
-  return Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
+  Widget _buildDetailCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Detail Barang',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            _buildDetailRow(Icons.category, 'Kategori', item.category.name),
+            _buildDetailRow(Icons.warehouse, 'Gudang', item.warehouse.name),
+            _buildDetailRow(Icons.inventory, 'Stok Total', '${item.stock}'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Detail Barang',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          Icon(icon, size: 20, color: Colors.grey[600]),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          _buildDetailRow(Icons.category, 'Kategori', item.category.name),
-          _buildDetailRow(Icons.warehouse, 'Gudang', item.warehouse.name),
-          _buildDetailRow(Icons.inventory, 'Stok Total', '${item.stock}'),
-          _buildDetailRow(Icons.construction, 'Kondisi', 'Baik (90%)'),
-          _buildDetailRow(Icons.calendar_today, 'Terakhir Diperbarui', '21 Jun 2023'),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildDetailRow(IconData icon, String label, String value) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
+  Widget _buildUnitsSection(BuildContext context) {
+    return Consumer<ItemProvider>(
+      builder: (context, provider, _) {
+        final units = provider.unitsForItem(item.id);
+        final isLoading = provider.isLoadingUnits;
 
-  // Di bagian _buildUnitsSection, ubah menjadi:
-Widget _buildUnitsSection(BuildContext context) {
-  return Consumer<ItemProvider>(
-    builder: (context, provider, _) {
-      final units = provider.unitsForItem(item.id);
-      final isLoading = provider.isLoadingUnits;
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Unit Barang',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 8),
-          if (item.type.toLowerCase() != 'consumable')
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : units.isEmpty
-                    ? const Text('Tidak ada unit tersedia')
-                    : ItemUnitList(units: units, item: item) // Pass item ke ItemUnitList
-          else
-            const Text('Barang habis pakai tidak memiliki unit'),
-        ],
-      );
-    },
-  );
-}
-
-  TableRow _buildTableRow(String label, String value) {
-    return TableRow(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Unit Barang',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-        ),
-      ],
+            const SizedBox(height: 8),
+            if (item.type.toLowerCase() == 'consumable')
+              const Text('Barang habis pakai tidak memiliki unit.')
+            else if (isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (units.isEmpty)
+              const Text('Tidak ada unit tersedia.')
+            else
+              ItemUnitList(units: units, item: item),
+          ],
+        );
+      },
     );
   }
 

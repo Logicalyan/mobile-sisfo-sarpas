@@ -7,22 +7,32 @@ class CartProvider with ChangeNotifier {
   List<CartItem> get items => _items;
 
   void addToCart(CartItem cartItem) {
-  // Untuk unit, pastikan tidak ada duplikat
-  if (cartItem.unit != null) {
-    final exists = _items.any((ci) => ci.unit?.id == cartItem.unit?.id);
-    if (exists) return;
-  }
-  
-  _items.add(cartItem);
-  notifyListeners();
-}
+    if (cartItem.unit != null) {
+      // Barang reusable: cek unit duplikat
+      final exists = _items.any((ci) => ci.unit?.id == cartItem.unit?.id);
+      if (exists) return;
+    } else {
+      // Barang consumable: cek apakah sudah ada item yg sama tanpa unit
+      final existingIndex = _items.indexWhere(
+        (ci) => ci.item.id == cartItem.item.id && ci.unit == null,
+      );
+      if (existingIndex != -1) {
+        _items[existingIndex].quantity += cartItem.quantity;
+        notifyListeners();
+        return;
+      }
+    }
 
-void removeFromCart(int itemId, {int? unitId}) {
-  _items.removeWhere((ci) => 
-      ci.item.id == itemId && 
-      (unitId == null || ci.unit?.id == unitId));
-  notifyListeners();
-}
+    _items.add(cartItem);
+    notifyListeners();
+  }
+
+  void removeFromCart(int itemId, {int? unitId}) {
+    _items.removeWhere(
+      (ci) => ci.item.id == itemId && (unitId == null || ci.unit?.id == unitId),
+    );
+    notifyListeners();
+  }
 
   void clearCart() {
     _items.clear();

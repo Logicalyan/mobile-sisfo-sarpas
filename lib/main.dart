@@ -11,7 +11,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ItemProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => BorrowProvider()),
+        // ChangeNotifierProvider(create: (_) => BorrowProvider()),
       ],
       child: const SarprasApp(),
     ),

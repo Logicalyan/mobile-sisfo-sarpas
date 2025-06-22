@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sisfo_sarpras_revisi/models/item.dart';
-import 'package:sisfo_sarpras_revisi/providers/cart_provider.dart';
 import 'package:sisfo_sarpras_revisi/providers/item_provider.dart';
 import 'package:sisfo_sarpras_revisi/views/home/widget/item_card.dart';
 
@@ -57,37 +56,6 @@ class _HomePageState extends State<HomePage> {
     ).filterItems(query: _searchController.text, categoryId: categoryId);
   }
 
-  void _showSimpleCartDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Cart Sementara'),
-      content: Consumer<CartProvider>(
-        builder: (context, cart, _) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final item in cart.items)
-              ListTile(
-                title: Text(item.item.name),
-                subtitle: item.unit != null 
-                    ? Text('Unit: ${item.unit!.serialNumber}')
-                    : Text('Qty: ${item.quantity}'),
-              ),
-            const Divider(),
-            Text('Total: ${cart.totalItems} items'),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('TUTUP'),
-        ),
-      ],
-    ),
-  );
-}
-
   @override
   Widget build(BuildContext context) {
     final itemProvider = Provider.of<ItemProvider>(context);
@@ -109,19 +77,6 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
 
-      // Tambahkan di scaffold home page
-      // floatingActionButton: Consumer<CartProvider>(
-      //   builder: (context, cart, _) {
-      //     if (cart.items.isEmpty) return const SizedBox();
-      //     return FloatingActionButton(
-      //       onPressed: () => _showSimpleCartDialog(context),
-      //       child: Badge(
-      //         label: Text('${cart.totalItems}'),
-      //         child: const Icon(Icons.shopping_cart),
-      //       ),
-      //     );
-      //   },
-      // ),
     );
   }
 
